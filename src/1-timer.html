@@ -4,7 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Countdown Timer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/izitoast/dist/css/iziToast.min.css">
+  <link rel="stylesheet" href="./css/styles.css" />
+
     <script type="module" crossorigin src="/goit-js-hw-10/1-timer.js"></script>
+      <script type="module" src="./js/1-timer.js" defer></script>
     <link
       rel="modulepreload"
       crossorigin
@@ -20,14 +25,17 @@
       crossorigin
       href="/goit-js-hw-10/assets/vendor-CZjNVMTf.css"
     />
+ 
+
   </head>
   <body>
+    <a class="back-link" href="./index.html">Go back</a>
     <h1>Countdown Timer</h1>
     <label>
       Choose a date:
     <input type="text" id="datetime-picker" />
     
-<button type="button" data-start>Start</button>
+<button type="button" data-start disabled>Start</button>
 
 <div class="timer">
   <div class="field">
@@ -47,6 +55,5 @@
     <span class="label">Seconds</span>
   </div>
 </div>
-
   </body>
 </html>

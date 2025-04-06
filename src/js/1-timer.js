@@ -1,67 +1,120 @@
-import './assets/modulepreload-polyfill-B5Qt9EMX.js';
-import { f as h, i as c } from './assets/vendor-BbbuE1sJ.js';
-document.addEventListener('DOMContentLoaded', () => {
-  const l = document.getElementById('datetime-picker'),
-    r = document.querySelector('[data-start]'),
-    u = document.querySelector('[data-days]'),
-    m = document.querySelector('[data-hours]'),
-    p = document.querySelector('[data-minutes]'),
-    f = document.querySelector('[data-seconds]');
-  let s,
-    a = null;
-  h(l, {
-    enableTime: !0,
-    time_24hr: !0,
-    defaultDate: new Date(),
-    minuteIncrement: 1,
-    onClose(t) {
-      (a = t[0]),
-        a < new Date()
-          ? (c.error({
-              title: 'Not available',
-              message: 'Please choose a date in the future',
-              position: 'topRight',
-            }),
-            (r.disabled = !0))
-          : (r.disabled = !1);
-    },
-  }),
-    r.addEventListener('click', () => {
-      if ((clearInterval(s), !a)) {
-        c.warning({
-          title: 'Error',
-          message: 'Please choose a date before activating the timer',
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
+
+const dateTimeInput = document.querySelector('input#datetime-picker');
+const startBtn = document.querySelector('[data-start]');
+const counters = {
+  days: document.querySelector('[data-days]'),
+  hours: document.querySelector('[data-hours]'),
+  minutes: document.querySelector('[data-minutes]'),
+  seconds: document.querySelector('[data-seconds]'),
+};
+
+let userSelectedDate;
+let timerInterval;
+
+const startBtnHighlight = isHovered => {
+  if (isHovered === undefined) {
+    startBtn.disabled = true;
+    startBtn.style.color = `#989898`;
+    startBtn.style.backgroundColor = `#cfcfcf`;
+    return;
+  }
+  startBtn.disabled = false;
+  if (isHovered) {
+    startBtn.style.color = `#ffffff`;
+    startBtn.style.backgroundColor = `#6C8CFF`;
+  } else {
+    startBtn.style.color = `#ffffff`;
+    startBtn.style.backgroundColor = `#4E75FF`;
+  }
+};
+
+const startBtnListen = () => {
+  const events = ['pointerover', 'pointerout', 'click'];
+  events.forEach(eventType => {
+    startBtn.addEventListener(eventType, event => {
+      if (!startBtn.disabled) {
+        if (event.type === 'click') {
+          startTimer();
+        } else if (event.type === 'pointerover') {
+          startBtnHighlight(true);
+        } else if (event.type === 'pointerout') {
+          startBtnHighlight(false);
+        }
+      }
+    });
+  });
+};
+
+flatpickr(dateTimeInput, {
+  enableTime: true,
+  time_24hr: true,
+  defaultDate: new Date(),
+  minuteIncrement: 1,
+  onChange(selectedDates) {
+    userSelectedDate = selectedDates[0];
+    if (userSelectedDate < new Date()) {
+      startBtnHighlight();
+      iziToast.error({
+        theme: 'dark',
+        backgroundColor: '#EF4040',
+        progressBarColor: '#B51B1B',
+        message: 'Please choose a date in the future',
+        position: 'topRight',
+      });
+    } else {
+      startBtnHighlight(false);
+    }
+  },
+});
+
+const startTimer = () => {
+  if (userSelectedDate > new Date()) {
+    startBtnHighlight();
+    dateTimeInput.disabled = true;
+    timerInterval = setInterval(() => {
+      const now = new Date();
+      const timer = userSelectedDate - now;
+      if (timer <= 0) {
+        clearInterval(timerInterval);
+        dateTimeInput.disabled = false;
+        iziToast.success({
+          theme: 'dark',
+          backgroundColor: '#59A10D',
+          progressBarColor: '#326101',
+          message: 'Timer finished!',
           position: 'topRight',
         });
-        return;
+      } else {
+        updateTimerDisplay(convertMs(timer));
       }
-      s = setInterval(() => {
-        const e = a - new Date();
-        if (e <= 0) {
-          clearInterval(s),
-            c.success({
-              title: 'Time has ended up',
-              message: 'Timer ran out',
-              position: 'topRight',
-            }),
-            d(0, 0, 0, 0);
-          return;
-        }
-        const { days: n, hours: o, minutes: i, seconds: g } = S(e);
-        d(n, o, i, g);
-      }, 1e3);
-    });
-  function S(t) {
-    const e = Math.floor(t / 864e5),
-      n = Math.floor((t % (1e3 * 60 * 60 * 24)) / (1e3 * 60 * 60)),
-      o = Math.floor((t % (1e3 * 60 * 60)) / (1e3 * 60)),
-      i = Math.floor((t % (1e3 * 60)) / 1e3);
-    return { days: e, hours: n, minutes: o, seconds: i };
+    }, 1000);
   }
-  function d(t, e, n, o) {
-    (u.textContent = String(t).padStart(2, '0')),
-      (m.textContent = String(e).padStart(2, '0')),
-      (p.textContent = String(n).padStart(2, '0')),
-      (f.textContent = String(o).padStart(2, '0'));
+};
+
+const updateTimerDisplay = ({ days, hours, minutes, seconds }) => {
+  for (const key in counters) {
+    counters[key].textContent = String(
+      { days, hours, minutes, seconds }[key]
+    ).padStart(2, '0');
   }
-});
+};
+
+const convertMs = ms => {
+  const second = 1000;
+  const minute = second * 60;
+  const hour = minute * 60;
+  const day = hour * 24;
+  const days = Math.floor(ms / day);
+  const hours = Math.floor((ms % day) / hour);
+  const minutes = Math.floor(((ms % day) % hour) / minute);
+  const seconds = Math.floor((((ms % day) % hour) % minute) / second);
+  return { days, hours, minutes, seconds };
+};
+
+startBtnHighlight();
+startBtnListen();
